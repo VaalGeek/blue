@@ -135,9 +135,10 @@ export async function uploadStakeholders(entries: any[], schoolId: string) {
 }
 
 
-export async function fetchByRole(role: string) {
+export async function fetchByRole(role: string,schoolId) {
   return await Stakeholder.find({
     role,
+    schoolId,
     name: { $exists: true, $ne: '' },
     surname: { $exists: true, $ne: '' }
   })
