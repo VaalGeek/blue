@@ -172,18 +172,24 @@ async function verifyStakeholder() {
   message.value = ''
 
   try {
-    let fcmToken: string | undefined
-    
+    // 1. Request Notification permission
     if ('Notification' in window && Notification.permission !== 'granted') {
-      await Notification.requestPermission()
-    }
-    
-    try {
-      fcmToken = await getToken($messaging, { vapidKey: config.public.VAPID_KEY })
-    } catch (tokenErr) {
-      console.warn('FCM token fetch failed:', tokenErr)
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') {
+        throw new Error('Notification permission is required to continue.')
+      }
     }
 
+    // 2. Get FCM token
+    let fcmToken: string | undefined
+    try {
+      fcmToken = await getToken($messaging, { vapidKey: config.public.VAPID_KEY })
+      if (!fcmToken) throw new Error('FCM token not obtained.')
+    } catch (tokenErr) {
+      throw new Error('Could not subscribe to notifications. Please allow notifications in your browser.')
+    }
+
+    // 3. Send verification
     const result: any = await $fetch('/api/stakeholders/verify', {
       method: 'POST',
       body: {
@@ -198,13 +204,14 @@ async function verifyStakeholder() {
       throw new Error(result.message || 'Verification failed')
     }
 
+    // 4. Save verification state
     localStorage.setItem('isStakeholder', 'true')
-    localStorage.setItem('fcmToken', fcmToken!)
-
+    localStorage.setItem('fcmToken', fcmToken)
     isVerified.value = true
     message.value = 'You have been verified successfully.'
     manualDismiss.value = false
 
+    // 5. Prompt PWA install
     if (canInstall.value) {
       const installChoice = await promptInstall()
       if (installChoice?.outcome === 'accepted') {
@@ -212,6 +219,7 @@ async function verifyStakeholder() {
       }
     }
 
+    // 6. Redirect
     router.push('/')
   } catch (err: any) {
     error.value = err?.data?.message || err.message || 'Something went wrong.'
@@ -219,6 +227,7 @@ async function verifyStakeholder() {
     loading.value = false
   }
 }
+
 </script>
 
 
