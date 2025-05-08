@@ -166,30 +166,44 @@ async function triggerInstall() {
 }
 
 
+function isIOSInBrowser() {
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+    !window.matchMedia('(display-mode: standalone)').matches
+  )
+}
+
 async function verifyStakeholder() {
   loading.value = true
   error.value = ''
   message.value = ''
 
   try {
-    // 1. Request Notification permission
-    if ('Notification' in window && Notification.permission !== 'granted') {
-      const permission = await Notification.requestPermission()
-      if (permission !== 'granted') {
-        throw new Error('Notification permission is required to continue.')
-      }
-    }
-
-    // 2. Get FCM token
     let fcmToken: string | undefined
-    try {
-      fcmToken = await getToken($messaging, { vapidKey: config.public.VAPID_KEY })
-      if (!fcmToken) throw new Error('FCM token not obtained.')
-    } catch (tokenErr) {
-      throw new Error('Could not subscribe to notifications. Please allow notifications in your browser.')
+
+    const isIOSBrowser = isIOSInBrowser()
+
+    if (!isIOSBrowser) {
+      // Regular flow for Android or PWA-installed iOS
+      if ('Notification' in window && Notification.permission !== 'granted') {
+        const permission = await Notification.requestPermission()
+        if (permission !== 'granted') {
+          throw new Error('Notification permission is required to continue.')
+        }
+      }
+
+      try {
+        fcmToken = await getToken($messaging, { vapidKey: config.public.VAPID_KEY })
+        if (!fcmToken) throw new Error('FCM token not obtained.')
+      } catch (tokenErr) {
+        throw new Error('Could not subscribe to notifications. Please allow notifications in your browser.')
+      }
+    } else {
+      // iOS browser - defer real token
+      fcmToken = ''
     }
 
-    // 3. Send verification
+    // Send verification
     const result: any = await $fetch('/api/stakeholders/verify', {
       method: 'POST',
       body: {
@@ -204,14 +218,13 @@ async function verifyStakeholder() {
       throw new Error(result.message || 'Verification failed')
     }
 
-    // 4. Save verification state
     localStorage.setItem('isStakeholder', 'true')
     localStorage.setItem('fcmToken', fcmToken)
     isVerified.value = true
     message.value = 'You have been verified successfully.'
     manualDismiss.value = false
 
-    // 5. Prompt PWA install
+    // Prompt install if supported
     if (canInstall.value) {
       const installChoice = await promptInstall()
       if (installChoice?.outcome === 'accepted') {
@@ -219,7 +232,6 @@ async function verifyStakeholder() {
       }
     }
 
-    // 6. Redirect
     router.push('/')
   } catch (err: any) {
     error.value = err?.data?.message || err.message || 'Something went wrong.'
@@ -227,6 +239,7 @@ async function verifyStakeholder() {
     loading.value = false
   }
 }
+
 
 </script>
 
