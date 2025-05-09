@@ -6,7 +6,7 @@ export async function sendPushNotification(tokens: string[], payload: admin.mess
 
   const response = await admin.messaging().sendEachForMulticast({
     tokens,
-    //notification: payload.notification,
+    notification: payload.notification,
     data: payload.data,
   })
 

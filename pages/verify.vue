@@ -181,8 +181,8 @@ async function verifyStakeholder() {
   try {
     let fcmToken: any
     const { requestNotificationPermission, getFCMToken } = useFCM()
-    const isIOSBrowser = isIOSInBrowser()
-
+    let isIOSBrowser = isIOSInBrowser()
+//isIOSBrowser = true;
     if (!isIOSBrowser) {
    
       const permission = await requestNotificationPermission()
@@ -209,7 +209,7 @@ async function verifyStakeholder() {
       body: {
         stakeholderId: route.query.sid,
         email: email.value,
-        mobile: mobile.value,
+        cell: mobile.value,
         fcmToken
       }
     })

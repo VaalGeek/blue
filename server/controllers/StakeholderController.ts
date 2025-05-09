@@ -135,7 +135,7 @@ export async function uploadStakeholders(entries: any[], schoolId: string) {
 }
 
 
-export async function fetchByRole(role: string,schoolId:string) {
+export async function fetchByRole(role: string, schoolId: string) {
   return await Stakeholder.find({
     role,
     schoolId,
@@ -254,17 +254,15 @@ export async function verify({
   if (!stakeholder.fcmToken) {
     stakeholder.verified = true
     stakeholder.fcmToken = fcmToken
-    
-    // Optional: store email/mobile only if not already set
-    if (normalizedEmail && !stakeholder.email) {
+
+    if (normalizedEmail) {
       stakeholder.email = normalizedEmail
     }
 
-    if (trimmedMobile && (!stakeholder.cell || stakeholder.cell.length === 0)) {
+    if (trimmedMobile) {
       stakeholder.cell = [trimmedMobile]
     }
 
-    // Save without requiring input token
     await stakeholder.save()
 
     return {
@@ -274,6 +272,7 @@ export async function verify({
       message: 'Stakeholder verified (token can be registered later)'
     }
   }
+
 
   // Case 2: Subsequent verification — validate and update token if necessary
   if (!normalizedEmail || !trimmedMobile || !fcmToken) {
