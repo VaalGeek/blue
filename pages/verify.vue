@@ -144,7 +144,8 @@ function alreadyInstalledClicked() {
 function confirmAlreadyInstalled(confirmed: boolean) {
   if (confirmed) {
     localStorage.setItem('isAppAdded', 'true')
-    manualDismiss.value = true
+    manualDismiss.value = true;
+    confirmAlreadyInstalled
   }
   showAlreadyInstalledConfirm.value = false
 }
@@ -182,9 +183,9 @@ async function verifyStakeholder() {
     let fcmToken: any
     const { requestNotificationPermission, getFCMToken } = useFCM()
     let isIOSBrowser = isIOSInBrowser()
-//isIOSBrowser = true;
+    //isIOSBrowser = true;
     if (!isIOSBrowser) {
-   
+
       const permission = await requestNotificationPermission()
       if (permission !== 'granted') {
         throw new Error('Notification permission is required to continue.')
@@ -221,8 +222,13 @@ async function verifyStakeholder() {
     localStorage.setItem('isStakeholder', 'true')
     localStorage.setItem('fcmToken', fcmToken)
     isVerified.value = true
-    message.value = 'You have been verified successfully.'
-    manualDismiss.value = false
+    message.value = 'You have been verified successfully.';
+    // Wait a bit before redirecting to the home page, giving user time to read
+    setTimeout(() => {
+      manualDismiss.value = false
+      router.push('/')
+    }, 3000) // 3 seconds delay
+   
 
     // Prompt install if supported
     if (canInstall.value) {
@@ -232,7 +238,7 @@ async function verifyStakeholder() {
       }
     }
 
-    router.push('/')
+    //router.push('/')
   } catch (err: any) {
     error.value = err?.data?.message || err.message || 'Something went wrong.'
   } finally {
