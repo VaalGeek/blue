@@ -179,21 +179,19 @@ async function verifyStakeholder() {
   message.value = ''
 
   try {
-    let fcmToken: string | undefined
-
+    let fcmToken: any
+    const { requestNotificationPermission, getFCMToken } = useFCM()
     const isIOSBrowser = isIOSInBrowser()
 
     if (!isIOSBrowser) {
-      // Regular flow for Android or PWA-installed iOS
-      if ('Notification' in window && Notification.permission !== 'granted') {
-        const permission = await Notification.requestPermission()
-        if (permission !== 'granted') {
-          throw new Error('Notification permission is required to continue.')
-        }
+   
+      const permission = await requestNotificationPermission()
+      if (permission !== 'granted') {
+        throw new Error('Notification permission is required to continue.')
       }
 
       try {
-        fcmToken = await getToken($messaging, { vapidKey: config.public.VAPID_KEY })
+        fcmToken = await getFCMToken();
         if (!fcmToken) throw new Error('FCM token not obtained.')
       } catch (tokenErr) {
         throw new Error('Could not subscribe to notifications. Please allow notifications in your browser.')
@@ -202,6 +200,8 @@ async function verifyStakeholder() {
       // iOS browser - defer real token
       fcmToken = ''
     }
+
+
 
     // Send verification
     const result: any = await $fetch('/api/stakeholders/verify', {

@@ -135,7 +135,7 @@ export async function uploadStakeholders(entries: any[], schoolId: string) {
 }
 
 
-export async function fetchByRole(role: string,schoolId) {
+export async function fetchByRole(role: string,schoolId:string) {
   return await Stakeholder.find({
     role,
     schoolId,
@@ -230,12 +230,12 @@ export async function fetchGradesClassesStaff(schoolId: string) {
 export async function verify({
   stakeholderId,
   email,
-  mobile,
+  cell,
   fcmToken
 }: {
   stakeholderId?: string
   email?: string
-  mobile?: string
+  cell?: string
   fcmToken?: string
 }) {
   if (!stakeholderId) {
@@ -248,7 +248,7 @@ export async function verify({
   }
 
   const normalizedEmail = email?.toLowerCase().trim()
-  const trimmedMobile = mobile?.trim()
+  const trimmedMobile = cell?.trim()
 
   // Case 1: First-time verification (no fcmToken yet in DB)
   if (!stakeholder.fcmToken) {
@@ -422,4 +422,43 @@ export async function assignGroup(stakeholders: any) {
     }
   }
 }
+
+
+
+export async function checkStakeholder({
+  email,
+  cell,
+  role
+}: {
+  email?: string
+  cell?: string
+  role?: string
+}) {
+  if (!role || (!email && !cell)) {
+    return { valid: false, message: 'Missing required fields' }
+  }
+
+  const normalizedEmail = email?.toLowerCase().trim()
+  const trimmedCell = cell?.trim()
+
+  const stakeholder = await Stakeholder.findOne({
+    role,
+    $or: [
+      { email: normalizedEmail },
+      { cell: trimmedCell },
+      { cell: { $in: [trimmedCell] } } // support array of cell numbers
+    ]
+  })
+
+  if (!stakeholder) {
+    return { valid: false, message: 'Stakeholder not found' }
+  }
+
+  return {
+    valid: true,
+    _id: stakeholder._id,
+    message: 'Stakeholder exists'
+  }
+}
+
 
