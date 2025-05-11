@@ -91,6 +91,7 @@ const reverify = async () => {
     })
 
     if (!checkStakeholder.valid) {
+     
       formError.value = 'Please provide correct contact details and role'
       return
     }
