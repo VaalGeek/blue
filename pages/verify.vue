@@ -224,12 +224,12 @@ async function verifyStakeholder() {
     isVerified.value = true
     message.value = 'You have been verified successfully.';
     // Wait a bit before redirecting to the home page, giving user time to read
-    setTimeout(() => {
+   /* setTimeout(() => {
       manualDismiss.value = false
       router.push('/')
     }, 3000) // 3 seconds delay
    
-
+*/
     // Prompt install if supported
     if (canInstall.value) {
       const installChoice = await promptInstall()
